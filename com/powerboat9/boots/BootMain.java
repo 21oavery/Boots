@@ -108,13 +108,17 @@ public class Main {
     }
     
     public static BootTaskList cook(HashMap<String, BootTaskProp> propList) {
-        String getTrueName(String task) {
-            int paran;
-            if ((paran = task.indexOf('(')) != -1) return task.substring(0, paran);
-            return task;
-        }
-        BootTaskProp createTrueProp(BootTaskProp templet) {
-            if ((templet.macros == null) || (templet.macros.length == 0)) return null;
+        BootTaskProp createTrueProp(BootTaskProp templet, String[] mac) {
+            if ((templet.macros == null) || (templet.macros.length == 0)) return templet;
+            if (templet.macros.length > mac.length) return null;
+            BootTaskProp n = new BootTaskProp();
+            n.name = templet.name + "(";
+            for (int i = 0; i < mac.length; i++) n.name += " " + mac[i];
+            for (int i = 0; i < templet.deps.length; i++) {
+                String old = templet.deps[i];
+                while (hasDoneWork) {
+                    for (int j = 0; j < mac.length; j++) {
+                        
             
         BootTaskList l = new BootTaskList();
         l.map = new HashMap<>();
