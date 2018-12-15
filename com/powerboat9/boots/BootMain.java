@@ -58,6 +58,9 @@ public class Main {
                             if (params[j].length() == 0) {
                                 printParseError(line, "Parameter list has empty parameters"); // Technically parsable, but it's time to stop
                                 return null;
+                            } else if (params[j].indexOf(" ") != -1) {
+                                printParseError(line, "Parameter name cannot contain spaces");
+                                return null;
                             }
                         }
                         t.macros = params;
@@ -112,7 +115,7 @@ public class Main {
             if ((templet.macros == null) || (templet.macros.length == 0)) return templet;
             if (templet.macros.length > mac.length) return null;
             BootTaskProp n = new BootTaskProp();
-            n.name = templet.name + "(";
+            n.name = templet.name + " ";
             for (int i = 0; i < mac.length; i++) n.name += " " + mac[i];
             for (int i = 0; i < templet.deps.length; i++) {
                 String old = templet.deps[i];
