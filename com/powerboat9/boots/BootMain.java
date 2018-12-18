@@ -1,8 +1,6 @@
 import java.util.*;
 
 public class Main {
-    public static HashMap<UUID, BootTaskFull> tasks;
-    
     public static HashMap<String, BootTaskProp> buildTasks(File config) {
         void printParseError(int line, String s) {
             System.err.println("[ERROR][LINE " + line + "] " + s);
@@ -111,17 +109,64 @@ public class Main {
     }
     
     public static BootTaskList cook(HashMap<String, BootTaskProp> propList) {
+        String replaceMacros(String s, String[] names, String[] values) {
+            int cnt = 0;
+            if (names.length > values.length) return null;
+            String n;
+            boolean hasDoneWork = true;
+            while (hasDoneWork) {
+                if (cnt > 4096) return null;
+                hasDoneWork = false;
+                for (int j = 0; j < names.length; j++) {
+                    n = s.replace(names[j], values[j]);
+                    if (!s.equals(n)) {
+                        hasDoneWork = true;
+                        s = n;
+                    }
+                }
+            }
+            return s;
+        }
+        
         BootTaskProp createTrueProp(BootTaskProp templet, String[] mac) {
+            String[] replaceList(String[] from, String[] names, String[] values) {
+                String[] n = new String[from.length];
+                for (int i = 0; i < from.length; i++) {
+                    n[i] = replaceMacros(from[i], names, values);
+                    if (n[i] == null) {
+                        System.err.println("[ERROR] Macro failure");
+                        return null;
+                    }
+                }
+                return n;
+            }
             if ((templet.macros == null) || (templet.macros.length == 0)) return templet;
-            if (templet.macros.length > mac.length) return null;
+            if (templet.macros.length > mac.length) {
+                System.err.println("[ERROR] Too few parameters");
+                return null;
+            }
             BootTaskProp n = new BootTaskProp();
-            n.name = templet.name + " ";
-            for (int i = 0; i < mac.length; i++) n.name += " " + mac[i];
-            for (int i = 0; i < templet.deps.length; i++) {
-                String old = templet.deps[i];
-                while (hasDoneWork) {
-                    for (int j = 0; j < mac.length; j++) {
-                        
+            n.name = templet.name;
+            for (int i = 0; i < mac.length; i++) n.name += " " + mac[i].replace("z", "zz").replace(" ", "z");
+            n.macros = null;
+            n.type = templet.type;
+            n.deps = replaceList(templet.deps, templet.macros, mac);
+            if (n.deps == null) return null;
+            n.depsOpt = replaceList(templet.depsOpt, templet.macros, mac);
+            if (n.depsOpt == null) return null;
+            n.extraProps = new HashMap<>();
+            for (Map.Entry<String, String> e : templet.entrySet()) {
+                String k = replaceMacros(e.getKey(), templet.macros, mac);
+                if (k == null) {
+                    System.err.println("[ERROR] Macro failure");
+                    return null;
+                }
+                String v = replaceMacros(e.getValue(), templet.macros, mac);
+                if (v == null) {
+                    System.err.println("[ERROR] Macro failure");
+                    return null;
+                }
+            }
             
         BootTaskList l = new BootTaskList();
         l.map = new HashMap<>();
@@ -155,7 +200,7 @@ public class Main {
                 full.deps = new UUID[prop.deps.length];
                 full.depsOpt = new UUID[prop.depsOpt.length];
     
-    public static void runAllTasks() {
+    public static void runAllTasks(HashMap<UUID, BootTaskFull> tasks) {
         boolean notDone = true;
         while (notDone) {
             notDone = false;
