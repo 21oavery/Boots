@@ -166,8 +166,10 @@ public class Main {
                     System.err.println("[ERROR] Macro failure");
                     return null;
                 }
+                n.extraProps.put(k, v);
             }
-            
+        }
+        String[] get
         BootTaskList l = new BootTaskList();
         l.map = new HashMap<>();
         HashMap<String, UUID> uuidMap = new HashMap<>();
